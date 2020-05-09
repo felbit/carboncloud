@@ -7,8 +7,12 @@ assert test passStatement failStatement =
 typeB :: TypeB
 typeB = TypeB (Cost 1.23) (NodeName "Node B") []
 
-treeA =
-  Tree_TypeA (NodeInfo (Cost 23.42) (NodeName "Node A")) "Some Description" []
+withBepa :: TypeB
+withBepa = TypeB (Cost 1.23) (NodeName "Some Bepa") []
+
+treeA = Tree_TypeA (NodeInfo (Cost 23.42) (NodeName "Node A"))
+                   "Some Description"
+                   [Tree_TypeB withBepa]
 
 treeB = Tree_TypeB typeB
 
