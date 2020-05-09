@@ -15,7 +15,7 @@ data Tree
 
 newtype NodeName =
   NodeName String
-  deriving (Show)
+  deriving (Show, Eq)
 
 newtype Cost =
   Cost Float
@@ -32,15 +32,14 @@ getCommonNodeNamesExceptBepa t1 t2 =
   getCommonNodeNamesExceptBepa' t1 ++ getCommonNodeNamesExceptBepa' t2
 
 getCommonNodeNamesExceptBepa' :: Tree -> [NodeName]
-getCommonNodeNamesExceptBepa' (Tree_TypeA (NodeInfo _ (NodeName nodeName)) _ [])
-  = [nodeName]
-getCommonNodeNamesExceptBepa' (Tree_TypeA (NodeInfo _ (NodeName nodeName)) _ [tree])
-  = nodeName : getCommonNodeNamesExceptBepa' tree
+getCommonNodeNamesExceptBepa' (Tree_TypeA (NodeInfo _ nodeName) _ []) =
+  [nodeName]
+getCommonNodeNamesExceptBepa' (Tree_TypeA (NodeInfo _ nodeName) _ [tree]) =
+  nodeName : getCommonNodeNamesExceptBepa' tree
 getCommonNodeNamesExceptBepa' (Tree_TypeB typeB) =
   getCommonNodeNamesExceptBepaFromTypeB typeB
 
 getCommonNodeNamesExceptBepaFromTypeB :: TypeB -> [NodeName]
-getCommonNodeNamesExceptBepaFromTypeB (TypeB _ (NodeName nodeName) []) =
-  [nodeName]
-getCommonNodeNamesExceptBepaFromTypeB (TypeB _ (NodeName nodeName) [typeB]) =
+getCommonNodeNamesExceptBepaFromTypeB (TypeB _ nodeName []) = [nodeName]
+getCommonNodeNamesExceptBepaFromTypeB (TypeB _ nodeName [typeB]) =
   nodeName : getCommonNodeNamesExceptBepaFromTypeB typeB
