@@ -1,30 +1,61 @@
+import           Data.List                      ( sort )
 import           Lib
+import           Test.QuickCheck
 
-assert :: Bool -> String -> String -> IO ()
-assert test passStatement failStatement =
-  if test then putStrLn passStatement else putStrLn failStatement
+instance Arbitrary NodeName where
+  arbitrary = do
+    name <-
+      oneof
+      $   return
+      <$> [ "foo"
+          , "bar"
+          , "quuz"
+          , "Some\n"
+          , "Bepa"
+          , "MoreBepa"
+          , "BepaWithSuffix"
+          , "InfixBepaword"
+          , "bePa"
+          ]
+    return $ NodeName name
 
-typeB :: TypeB
-typeB = TypeB (Cost 1.23) (NodeName "Node B") []
+instance Arbitrary TypeB where
+  arbitrary = sized typeB'
 
-withBepa :: TypeB
-withBepa = TypeB (Cost 1.23) (NodeName "Some Bepa") [withBepaWrongCase]
+typeB' :: Int -> Gen TypeB
+typeB' 0         = TypeB <$> arbitrary <*> arbitrary <*> return []
+typeB' n | n > 0 = TypeB <$> arbitrary <*> arbitrary <*> typeB' (n `div` 2)
 
-withBepaWrongCase :: TypeB
-withBepaWrongCase = TypeB (Cost 1.23) (NodeName "New bePa-case") []
+instance Arbitrary Tree where
+  arbitrary = sized tree'
 
-treeA = Tree_TypeA (NodeInfo (Cost 23.42) (NodeName "Node A"))
-                   "Some Description"
-                   [Tree_TypeB withBepa]
+tree' 0 =
+  oneof [Tree_TypeA $ arbitrary <*> arbitrary <*> [], Tree_TypeB <$> typeB' 0]
+tree' n | n > 0 = oneof
+  [ Tree_TypeA $ arbitrary <*> arbitrary <*> [tree' (n `div` 2)]
+  , Tree_TypeB <$> typeB' n
+  ]
 
-treeB = Tree_TypeB typeB
+prop_getCommonNodeNamesExceptBepa :: Tree -> Tree -> Bool
+prop_getCommonNodeNamesExceptBepa tree1 tree2 =
+  sort (getCommonNodeNamesExceptBepa tree1 tree2)
+    == sort (getCommonNodeNamesExceptBepa tree2 tree1)
+
+prop_isBepaFindsBepaCorrectly :: NodeName -> Bool
+prop_isBepaFindsBepaCorrectly val =
+  if nodeName `elem` ["Bepa", "MoreBepa", "BepaWithSuffix", "InfixBepaword"]
+    then isBepa val
+    else not (isBepa val)
+  where (NodeName nodeName) = val
+
+prop_commonNodeNamesIsCommutative :: [NodeName] -> [NodeName] -> Bool
+prop_commonNodeNamesIsCommutative _  [] = True
+prop_commonNodeNamesIsCommutative [] _  = True
+prop_commonNodeNamesIsCommutative xs ys =
+  sort (commonNodeNames xs ys) == sort (commonNodeNames ys xs)
 
 main :: IO ()
 main = do
-  putStrLn "Testing tree ..."
-  assert
-    (  (getCommonNodeNamesExceptBepa treeA treeB)
-    == [NodeName "Node A", NodeName "New bePa-case", NodeName "Node B"]
-    )
-    "... success!"
-    "... failure!"
+  quickCheck prop_isBepaFindsBepaCorrectly
+  quickCheck prop_commonNodeNamesIsCommutative
+  quickCheck prop_getCommonNodeNamesExceptBepa
