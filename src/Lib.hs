@@ -3,51 +3,43 @@ module Lib where
 import           Data.List
 import           Data.Maybe
 
-data NodeInfo = NodeInfo
-  { cost :: Cost
-  , nodeInfoName :: NodeName
-  }
+data NodeInfo = NodeInfo { cost :: Cost
+                         , nodeInfoName :: NodeName
+                         }
 
-data Tree
-  = Tree_TypeA NodeInfo
-               String
-               [Tree]
-  | Tree_TypeB TypeB
+data Tree = TreeTypeA NodeInfo String [Tree]
+          | TreeTypeB TypeB
 
-newtype NodeName =
-  NodeName String
-  deriving (Eq)
+newtype NodeName = NodeName String deriving (Eq)
 
-newtype Cost =
-  Cost Float
+newtype Cost = Cost Float
 
-data TypeB =
-  TypeB Cost
-        NodeName
-        [TypeB]
+data TypeB = TypeB Cost NodeName [TypeB]
 
 getCommonNodeNamesExceptBepa :: Tree -> Tree -> [NodeName]
-getCommonNodeNamesExceptBepa t1 t2 =
-  filterBepa
-    $  getCommonNodeNamesExceptBepa' t1
-    ++ getCommonNodeNamesExceptBepa' t2
+getCommonNodeNamesExceptBepa t1 t2 = filterBepa
+  $ commonNodeNames (getNodeNames t1) (getNodeNames t2)
   where filterBepa = filter (not . isBepa)
 
-getCommonNodeNamesExceptBepa' :: Tree -> [NodeName]
-getCommonNodeNamesExceptBepa' (Tree_TypeA (NodeInfo _ nodeName) _ []) =
-  [nodeName]
-getCommonNodeNamesExceptBepa' (Tree_TypeA (NodeInfo _ nodeName) _ [tree]) =
-  nodeName : getCommonNodeNamesExceptBepa' tree
-getCommonNodeNamesExceptBepa' (Tree_TypeB typeB) =
-  getCommonNodeNamesExceptBepaFromTypeB typeB
+getNodeNames :: Tree -> [NodeName]
+getNodeNames (TreeTypeA (NodeInfo _ nodeName) _ []) = [nodeName]
+getNodeNames (TreeTypeA (NodeInfo _ nodeName) _ [tree]) =
+  nodeName : getNodeNames tree
+getNodeNames (TreeTypeB typeB) = getNodeNamesTypeB typeB
 
-getCommonNodeNamesExceptBepaFromTypeB :: TypeB -> [NodeName]
-getCommonNodeNamesExceptBepaFromTypeB (TypeB _ nodeName []) = [nodeName]
-getCommonNodeNamesExceptBepaFromTypeB (TypeB _ nodeName [typeB]) =
-  nodeName : getCommonNodeNamesExceptBepaFromTypeB typeB
+getNodeNamesTypeB :: TypeB -> [NodeName]
+getNodeNamesTypeB (TypeB _ nodeName []) = [nodeName]
+getNodeNamesTypeB (TypeB _ nodeName [typeB]) =
+  nodeName : getNodeNamesTypeB typeB
 
 isBepa :: NodeName -> Bool
 isBepa (NodeName nodeName) = isJust $ findSubString "Bepa" nodeName
 
 findSubString :: (Eq a) => [a] -> [a] -> Maybe Int
 findSubString sub string = findIndex (isPrefixOf sub) (tails string)
+
+commonNodeNames :: Eq a => [a] -> [a] -> [a]
+commonNodeNames _  [] = []
+commonNodeNames [] _  = []
+commonNodeNames (x : xs) ys =
+  if x `elem` ys then x : commonNodeNames xs ys else commonNodeNames xs ys
