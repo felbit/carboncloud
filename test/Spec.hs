@@ -1,4 +1,6 @@
+import           Data.Char                      ( toLower )
 import           Data.List                      ( sort )
+import           Data.Maybe                     ( isJust )
 import           Lib
 import           Test.QuickCheck
 
@@ -61,9 +63,12 @@ prop_getCommonNodeNamesExceptBepa tree1 tree2 =
 
 prop_isBepaFindsBepaCorrectly :: NodeName -> Bool
 prop_isBepaFindsBepaCorrectly val =
-  if nodeName `elem` ["Bepa", "MoreBepa", "BepaWithSuffix", "InfixBepaword"]
-    then isBepa val
-    else not (isBepa val)
+  if nodeName
+     `elem` ["Bepa", "MoreBepa", "BepaWithSuffix", "InfixBepaword", "bePa"]
+  then
+    isBepa val
+  else
+    not (isBepa val)
   where (NodeName nodeName) = val
 
 prop_commonNodeNamesIsCommutative :: [NodeName] -> [NodeName] -> Bool
@@ -72,8 +77,21 @@ prop_commonNodeNamesIsCommutative [] _  = True
 prop_commonNodeNamesIsCommutative xs ys =
   sort (commonNodeNames xs ys) == sort (commonNodeNames ys xs)
 
+-- 'bepa' (case insensitive) should never be part of the results
+prop_bepaNotPartOfResultSet :: [NodeName] -> Bool
+prop_bepaNotPartOfResultSet nodeNames = (not . containsBepa) filteredNodeTypes
+ where
+  filteredNodeTypes = filterBepa nodeNames
+  containsBepa [] = False
+  containsBepa (nodeName : rest) =
+    isBepaCaseInsensitive nodeName || containsBepa rest
+  isBepaCaseInsensitive (NodeName nodeName) =
+    isJust $ findSubString "bepa" (toLower <$> nodeName)
+
+
 main :: IO ()
 main = do
   quickCheck prop_isBepaFindsBepaCorrectly
   quickCheck prop_commonNodeNamesIsCommutative
+  quickCheck prop_bepaNotPartOfResultSet
   quickCheck prop_getCommonNodeNamesExceptBepa

@@ -1,7 +1,8 @@
 module Lib where
 
+import           Data.Char                      ( toLower )
 import           Data.List
-import           Data.Maybe
+import           Data.Maybe                     ( isJust )
 
 data NodeInfo = NodeInfo { cost :: Cost
                          , nodeInfoName :: NodeName
@@ -18,10 +19,11 @@ newtype Cost = Cost Float deriving (Show)
 data TypeB = TypeB Cost NodeName [TypeB] deriving (Show)
 
 getCommonNodeNamesExceptBepa :: Tree -> Tree -> [NodeName]
-getCommonNodeNamesExceptBepa t1 t2 = filterBepa $ nub $ commonNodeNames
-  (getNodeNames t1)
-  (getNodeNames t2)
-  where filterBepa = filter (not . isBepa)
+getCommonNodeNamesExceptBepa t1 t2 =
+  filterBepa $ commonNodeNames (getNodeNames t1) (getNodeNames t2)
+
+filterBepa :: [NodeName] -> [NodeName]
+filterBepa = filter (not . isBepa)
 
 getNodeNames :: Tree -> [NodeName]
 getNodeNames (Tree_TypeA (NodeInfo _ nodeName) _ []) = [nodeName]
@@ -41,7 +43,8 @@ getNodeNamesFromTypeBList :: [TypeB] -> [NodeName]
 getNodeNamesFromTypeBList = concatMap getNodeNamesTypeB
 
 isBepa :: NodeName -> Bool
-isBepa (NodeName nodeName) = isJust $ findSubString "Bepa" nodeName
+isBepa (NodeName nodeName) =
+  isJust $ findSubString "bepa" (toLower <$> nodeName)
 
 findSubString :: String -> String -> Maybe Int
 findSubString sub string = findIndex (isPrefixOf sub) (tails string)
