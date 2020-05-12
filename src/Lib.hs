@@ -1,8 +1,16 @@
 module Lib where
 
 import           Data.Char                      ( toLower )
-import           Data.List
+import           Data.List                      ( findIndex
+                                                , isPrefixOf
+                                                , tails
+                                                )
 import           Data.Maybe                     ( isJust )
+import qualified Data.Set                      as Set
+                                                ( fromList
+                                                , intersection
+                                                , toList
+                                                )
 
 data NodeInfo = NodeInfo { cost :: Cost
                          , nodeInfoName :: NodeName
@@ -12,7 +20,7 @@ data Tree = Tree_TypeA NodeInfo String [Tree]
           | Tree_TypeB TypeB
           deriving (Show)
 
-newtype NodeName = NodeName String deriving (Eq, Show)
+newtype NodeName = NodeName String deriving (Eq, Ord, Show)
 
 newtype Cost = Cost Float deriving (Show)
 
@@ -49,13 +57,7 @@ isBepa (NodeName nodeName) =
 findSubString :: String -> String -> Maybe Int
 findSubString sub string = findIndex (isPrefixOf sub) (tails string)
 
--- If the list xs contains duplicate values the resulting list will have 
--- duplicate values as well. This might not be the expected behaviour of 
--- `commonNodeNames`. Therefore, I introduced `nub` to ensure unique 
--- values.
+-- | Returns the intersection of Sets from the two input lists of NodeNames as list
 commonNodeNames :: [NodeName] -> [NodeName] -> [NodeName]
-commonNodeNames xs ys = nub $ commonNodeNames' xs ys
-commonNodeNames' _  [] = []
-commonNodeNames' [] _  = []
-commonNodeNames' (x : xs) ys =
-  if x `elem` ys then x : commonNodeNames xs ys else commonNodeNames xs ys
+commonNodeNames xs ys =
+  Set.toList $ Set.intersection (Set.fromList xs) (Set.fromList ys)

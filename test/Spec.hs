@@ -6,10 +6,6 @@ import           Data.Maybe                     ( isJust )
 import           Lib
 import           Test.QuickCheck
 
--- Need to add Ord to NodeName for testing
-instance Ord NodeName where
-  compare (NodeName name1) (NodeName name2) = compare name1 name2
-
 -- * Generators
 
 instance Arbitrary NodeName where
@@ -93,7 +89,7 @@ prop_commonNodeNamesIsCommutative :: [NodeName] -> [NodeName] -> Bool
 prop_commonNodeNamesIsCommutative _  [] = True
 prop_commonNodeNamesIsCommutative [] _  = True
 prop_commonNodeNamesIsCommutative xs ys =
-  sort (commonNodeNames xs ys) == sort (commonNodeNames ys xs)
+  commonNodeNames xs ys == commonNodeNames ys xs
 
 -- 'bepa' (case insensitive) should never be part of the results
 prop_bepaNotPartOfResultSet :: Tree -> Tree -> Bool
