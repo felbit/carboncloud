@@ -6,6 +6,10 @@ import           Data.Maybe                     ( isJust )
 import           Lib
 import           Test.QuickCheck
 
+-- Need to add Ord to NodeName for testing
+instance Ord NodeName where
+  compare (NodeName name1) (NodeName name2) = compare name1 name2
+
 -- * Generators
 
 instance Arbitrary NodeName where

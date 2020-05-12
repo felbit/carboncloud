@@ -12,7 +12,7 @@ data Tree = Tree_TypeA NodeInfo String [Tree]
           | Tree_TypeB TypeB
           deriving (Show)
 
-newtype NodeName = NodeName String deriving (Eq, Ord, Show)
+newtype NodeName = NodeName String deriving (Eq, Show)
 
 newtype Cost = Cost Float deriving (Show)
 
